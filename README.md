@@ -1,6 +1,6 @@
 Planet Simulator:
 
-You'll need pygame to run the simulator, so if you don't have it installed already,
+You'll need pygame to run the simulator, so if you don't have it installed already, run
 
 > pip3 install pygame --user
 
