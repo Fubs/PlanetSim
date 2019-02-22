@@ -10,28 +10,32 @@ import pygame
 import pygame.mixer
 import math  
 import pygame.font
+from pygame.locals import *
 
 pygame.init()
 pygame.mixer.init()
 pygame.font.init()
 
-win = pygame.display.set_mode((width,height))
+truescreen = pygame.display.set_mode((width,height))
+win = truescreen.copy()
 clock = pygame.time.Clock()
-
+displayfont = pygame.font.SysFont("Arial", 20)
 
 def distance(x1,y1,x2,y2):  
     dist = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)  
     return dist 
 
+
+# These values control the default position
 def resetpos():
     earth.vx = 0
-    earth.vy = 0.1 
-    earth.x = width/2 - width/3 
+    earth.vy = 5 
+    earth.x = width/2 - width/6 
     earth.y = height/2
-    sun.x = width/2
+    sun.x = width/2 + width/6
     sun.y = height/2
     sun.vx = 0
-    sun.vy = -0.1
+    sun.vy = -5
     return
 
 class orbiter:
@@ -44,6 +48,11 @@ class orbiter:
         self.ay = 0
         self.mass = 1
 
+def tracerUpdate(orbiter, xtracer, ytracer):
+    xtracer.insert(0, int(round(orbiter.x)))
+    ytracer.insert(0, int(round(orbiter.y)))
+    xtracer.pop()
+    ytracer.pop()   
 
 # This controls the number of position updates per frame
 ClockSpeed = 200
@@ -56,26 +65,35 @@ green = (0, 255, 0)
 blue = (0, 0, 255)
 yellow = (255, 255, 0)
 
-# You can change initial velocities and starting positions here
 earth = orbiter()
-earth.vx = 0
-earth.vy = 5
-earth.x = width/2 - width/3 
-earth.y = height/2
-earth.mass = 1
+earth.mass = 100
 
 sun = orbiter()
-sun.x = width/2
-sun.y = height/2
-sun.mass = 200
+sun.mass = 100
+
+resetpos()
 
 # This controls the strength of gravity
 G = 500
 
+# Path tracers are initialized with 100 zeroes due to how I wrote the tracer update function
+earthTracerX = []
+earthTracerY = []
+sunTracerX = []
+sunTracerY = []
+def cleartracers():
+    for x in range(100):
+        earthTracerX.append(0)
+        earthTracerY.append(0)
+        sunTracerX.append(0)
+        sunTracerY.append(0)
+
+cleartracers()
+
 run = True
 while run: 
     
-    clock.tick(ClockSpeed)
+    clock.tick(ClockSpeed*5)
     for event in pygame.event.get():
         if event.type == "pygame.QUIT":
             run = False
@@ -83,6 +101,8 @@ while run:
     win.fill((0,0,0)) 
     keys = pygame.key.get_pressed()
 
+    tracerUpdate(earth, earthTracerX, earthTracerY)
+    tracerUpdate(sun, sunTracerX, sunTracerY)
     
     dist = distance(earth.x, earth.y, sun.x, sun.y)
     f = (G*sun.mass*earth.mass)/(dist**2)
@@ -107,37 +127,57 @@ while run:
 
     if keys[pygame.K_r]:
         resetpos()
+        earthTracerX = []
+        earthTracerY = []
+        sunTracerX = []
+        sunTracerY = []
+        cleartracers()
 
     if keys[pygame.K_q]:
         run = False
 
     if keys[pygame.K_UP]:
-        earth.vy -= 0.1
+        earth.vy -= 0.2
 
     if keys[pygame.K_DOWN]:
-        earth.vy += 0.1
+        earth.vy += 0.2
         
     if keys[pygame.K_RIGHT]:
-        earth.vx += 0.1
+        earth.vx += 0.2
 
     if keys[pygame.K_LEFT]:
-        earth.vx -= 0.1
+        earth.vx -= 0.2
 
-    if dist < 12:
-        resetpos()
+    if dist < 30:
+        earth.vx *= 0.5
+        sun.vx *= 0.5
+        earth.vy *= 0.5
+        sun.vy *= 0.5
+
+    for p in range(100):
+        pygame.draw.circle(win, green, (int(round(earthTracerX[p])), int(round(earthTracerY[p]))), 1, 0)
+        pygame.draw.circle(win, red, (int(round(sunTracerX[p])), int(round(sunTracerY[p]))), 1, 0)
+
+        
+    pygame.draw.circle(win, blue, (int(round(earth.x)), int(round(earth.y))), 5,0)
+    pygame.draw.circle(win, yellow, (int(round(sun.x)),int(round(sun.y))), 5, 0)
+
+    Xcenter = (earth.x + sun.x)/2  
+    Ycenter = (earth.y + sun.y)/2
+    
 
 
-    displayfont = pygame.font.SysFont("Arial", 20)
+    truescreen.blit(win, (0,0))
+
+
     text1 = displayfont.render("controls:",0,white)
-    text2 = displayfont.render("arrow keys: control earth's motion",0,white)
-    text3 = displayfont.render("r: reset simulation",0,white)
-    text4 = displayfont.render("q: quit",0,white)
-    win.blit(text1,(5,height-125))
-    win.blit(text2,(5,height-100))
-    win.blit(text3,(5,height-75))
-    win.blit(text4,(5,height-50))
-    pygame.draw.circle(win, blue, ((int(round(earth.x))), int(round(earth.y))), 3,0)
-    pygame.draw.circle(win, yellow, (int(round(sun.x)),int(round(sun.y))), 12, 0)
+    text2 = displayfont.render("arrow keys - control blue dot's motion",0,white)
+    text3 = displayfont.render("r - reset",0,white)
+    text4 = displayfont.render("q - quit",0,white)
+    truescreen.blit(text1,(5,height - int(0.087 * height)))
+    truescreen.blit(text2,(5,height - int(0.0694 * height)))
+    truescreen.blit(text3,(5,height - int(0.0521 * height)))
+    truescreen.blit(text4,(5,height - int(0.0347 * height)))
 
 
     pygame.display.update()
