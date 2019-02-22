@@ -1,8 +1,8 @@
 # Planet simulator, by Max Behling.
 # Make sure to change the following variables to your screen resolution. 
 
-width = 1920
-height = 1080
+width = 2560
+height = 1430
 
 ###################################################################
 
@@ -10,7 +10,6 @@ import pygame
 import pygame.mixer
 import math  
 import pygame.font
-import random
 from pygame.locals import *
 
 pygame.init()
@@ -26,6 +25,8 @@ def distance(A,B):
     dist = math.sqrt((B.x - A.x)**2 + (B.y - A.y)**2)  
     return dist 
 
+
+# These values control the default position
 def resetpos():
     for orbiter in orbiterlist:
         orbiter.x = orbiter.ix
@@ -36,6 +37,7 @@ def resetpos():
         orbiter.ay = 0
         orbiter.xforce = 0
         orbiter.yforce = 0
+
 
 class orbiter:
     def __init__(self):
@@ -49,7 +51,7 @@ class orbiter:
         self.ivy = 0
         self.ax = 0
         self.ay = 0
-        self.mass = random.uniform(70,90)
+        self.mass = 100
         self.xforce = 0
         self.yforce = 0
         self.xtracer = []
@@ -64,7 +66,7 @@ def tracerUpdate(orbiter, xtracer, ytracer):
     ytracer.pop()   
 
 # This controls the run speed
-ClockSpeed = 100
+ClockSpeed = 200
 
 # Color codes
 white = (255, 255, 255)
@@ -84,33 +86,39 @@ orbiter1 = orbiter()
 orbiter1.color = blue
 orbiter1.tracercolor = purple
 orbiterlist.append(orbiter1)
-orbiter1.ix = random.uniform(0,width)
-orbiter1.iy = random.uniform(0,height)
-orbiter1.ivx = 1
-orbiter1.ivy = 1
+orbiter1.mass = 80
+orbiter1.ix = width/2 - width/6
+orbiter1.iy = height/2 - height/4
 
 orbiter2 = orbiter()
 orbiter2.color = red
 orbiter2.tracercolor = orange
 orbiterlist.append(orbiter2)
-orbiter2.ix = random.uniform(0,width)
-orbiter2.iy = random.uniform(0,height)
-orbiter2.ivx = 5
-orbiter2.ivy = -1
+orbiter2.mass = 80
+orbiter2.ix = width/2 + width/5
+orbiter2.iy = height/2 + height/5
 
-orbiter3 = orbiter()
-orbiter3.color = green
-orbiter3.tracercolor = yellow
-orbiterlist.append(orbiter3)
-orbiter3.ix = random.uniform(0,width)
-orbiter3.iy = random.uniform(0,height)
-orbiter3.ivx = 3
-orbiter3.ivy = -2
+# orbiter3 = orbiter()
+# orbiter3.color = green
+# orbiter3.tracercolor = yellow
+# orbiterlist.append(orbiter3)
+# orbiter3.mass = 80
+# orbiter3.ix = width/2
+# orbiter3.iy = height/2 + height/3
+
+# orbiter4 = orbiter()
+# orbiter4.color = (0,100,255)
+# orbiter4.tracercolor = red
+# orbiterlist.append(orbiter4)
+# orbiter4.mass = 80
+# orbiter4.ix = width/2 + width/4
+# orbiter4.iy = height/2 - height/4
+
 
 resetpos()
 
-# This controls the strength of gravity. Adding more orbiters requires weaker gravity.
-G = 0.1/len(orbiterlist)
+# This controls the strength of gravity
+G = 0.05
 
 # Path tracers are initialized with 100 zeroes due to how I wrote the tracer update function
 def cleartracers():
@@ -126,7 +134,7 @@ cleartracers()
 run = True
 while run: 
     
-    clock.tick(ClockSpeed)
+    clock.tick(ClockSpeed*5)
     for event in pygame.event.get():
         if event.type == "pygame.QUIT":
             run = False
@@ -147,10 +155,12 @@ while run:
         for other in copylist:
             dist = distance(orbiter, other)
             angle = math.atan2((other.y - orbiter.y), (other.x - orbiter.x))
-            # The force is ignored if the orbiters are closer than 100 units apart, since it gets too big when they are close together.
-            if dist > 100:
+            if dist > 30:
                 orbiter.xforce += (math.cos(angle) * G * orbiter.mass * other.mass)/(dist**2)
                 orbiter.yforce += (math.sin(angle) * G * orbiter.mass * other.mass)/(dist**2)
+            else:
+                orbiter.xforce += (math.cos(angle) * G * orbiter.mass * other.mass * 0.00001)/(dist**2)
+                orbiter.yforce += (math.sin(angle) * G * orbiter.mass * other.mass * 0.00001)/(dist**2)
 
     # Update positions
     for orbiter in orbiterlist:
@@ -158,7 +168,6 @@ while run:
         orbiter.ay = orbiter.yforce * orbiter.mass
         orbiter.vx += orbiter.ax
         orbiter.vy += orbiter.ay
-        # This logic makes the orbiters bounce off the sides of the screen.
         if orbiter.x + orbiter.vx > width-3:
             orbiter.x = width-4
             orbiter.vx *= -1
@@ -181,25 +190,21 @@ while run:
     if keys[pygame.K_r]:
         resetpos()
         cleartracers()
-        G += random.uniform(0.005,0.006) - random.uniform(0.005,0.006)
-        for orbiter in orbiterlist:
-            orbiter.x = random.uniform(0,width)
-            orbiter.y = random.uniform(0,height)
 
     if keys[pygame.K_q]:
         run = False
 
     if keys[pygame.K_UP]:
-        orbiter1.vy -= 0.3
+        orbiter1.vy -= 0.2
 
     if keys[pygame.K_DOWN]:
-        orbiter1.vy += 0.3
+        orbiter1.vy += 0.2
         
     if keys[pygame.K_RIGHT]:
-        orbiter1.vx += 0.3
+        orbiter1.vx += 0.2
 
     if keys[pygame.K_LEFT]:
-        orbiter1.vx -= 0.3
+        orbiter1.vx -= 0.2
 
 
     for orbiter in orbiterlist:
@@ -208,6 +213,11 @@ while run:
 
     for orbiter in orbiterlist: 
         pygame.draw.circle(win, orbiter.color, (int(round(orbiter.x)), int(round(orbiter.y))), 6, 0)
+
+    Xcenter = (orbiter1.x + orbiter2.x)/2  
+    Ycenter = (orbiter1.y + orbiter2.y)/2
+    
+
 
     truescreen.blit(win, (0,0))
 
