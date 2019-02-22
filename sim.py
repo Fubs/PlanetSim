@@ -1,8 +1,8 @@
 # Planet simulator, by Max Behling.
 # Make sure to change the following variables to your screen resolution. 
 
-width = 1920
-height = 1080
+width = 1900
+height = 1000
 
 ###################################################################
 
