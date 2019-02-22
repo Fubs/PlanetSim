@@ -9,3 +9,5 @@ Make sure to change the width and height variables to your liking before running
 > width = 1900
 
 > height = 1000
+
+Arrow keys control the blue dot, (r) resets the velocities and randomizes the positions, and (q) quits.
