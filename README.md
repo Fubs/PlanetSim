@@ -6,8 +6,6 @@ You'll need pygame to run the simulator, so if you don't have it installed alrea
 
 Make sure to change the width and height variables to your liking before running the program. Usually you'll want
 
-> width = 1920
+> width = 1900
 
-> height = 1080
-
-
+> height = 1000
